@@ -53,9 +53,99 @@ pink_shades <- c(
 
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
-
-   
+ui <- dashboardPage(skin = 'blue',
+                    dashboardHeader(title = 'DSP Dashboard'),
+                    dashboardSidebar(
+                      collapsed = FALSE, 
+                      div(htmlOutput("welcome"), style = "padding: 20px"),
+                      sidebarMenu(
+                        menuItem("DSP KPI", tabName = "dsp_kpi_page", icon = icon("bar-chart"))
+                      )
+                    ),
+                    dashboardBody(
+                      tabItems(
+                        tabItem(tabName = 'dsp_kpi_page',
+                                fluidRow(h4("Data Selection"),
+                                         box(
+                                           width = 12,
+                                           
+                                           box(
+                                             column(
+                                               width = 12,
+                                               DT::dataTableOutput("dsp_kpi_table"),
+                                               actionButton("do_refresh_dsp_kpi_tab", "Load data"),
+                                               h5('NOTE: table filtered for "Product" streams only')
+                                             )),
+                                           box(
+                                             column(
+                                               width = 12,
+                                               tableOutput("dsp_kpi_selectedRows") # Selected rows on the right side
+                                               
+                                               
+                                             )
+                                           )
+                                           
+                                         )
+                                         
+                                ),
+                                fluidRow(h4("Data Plots"),
+                                         tabsetPanel(
+                                           tabPanel("Step Recovery - Unit Op ID",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('step_unit_op_id_barplot')
+                                                      )
+                                                    ),
+                                                    downloadButton('step_unit_op_id_download', 'Download Plot')
+                                                    
+                                                    
+                                           ),
+                                           tabPanel("Mass Balance - Unit Op ID",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('mass_balance_unit_op_id_barplot')
+                                                      )
+                                                    ),
+                                                    downloadButton('mass_balance_unit_op_id_download', 'Download Plot')
+                                                    
+                                           ),
+                                           tabPanel("Step Recovery & Mass Balance - Unit Op ID",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('step_mass_combo_unit_op_type_barplot')
+                                                      )
+                                                    ),
+                                                    downloadButton('step_mass_combo_unit_op_type_download', 'Download Plot')
+                                           ),
+                                           tabPanel("Step Recovery - Unit Op Type",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('step_unit_op_type_barplot')
+                                                      ),
+                                                      box(
+                                                        tableOutput('step_unit_op_type_summary')
+                                                      )
+                                                    ),
+                                                    downloadButton('step_unit_op_type_download', 'Download Plot')
+                                           ),
+                                           tabPanel("Mass Balance - Unit Op Type",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('mass_balance_unit_op_type_barplot')
+                                                      ),
+                                                      box(
+                                                        tableOutput('mass_balance_unit_op_type_summary')
+                                                      )
+                                                    ),
+                                                    downloadButton('mass_balance_unit_op_type_download', 'Download Plot')
+                                           )
+                                           
+                                         )
+                                         
+                                )
+                        )
+                      )   
+                    )
 )
 
 # Define server logic required to draw a histogram
