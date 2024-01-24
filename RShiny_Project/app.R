@@ -59,7 +59,8 @@ ui <- dashboardPage(skin = 'blue',
                       collapsed = FALSE, 
                       div(htmlOutput("welcome"), style = "padding: 20px"),
                       sidebarMenu(
-                        menuItem("DSP KPI", tabName = "dsp_kpi_page", icon = icon("bar-chart"))
+                        menuItem("DSP KPI", tabName = "dsp_kpi_page", icon = icon("bar-chart")),
+                        menuItem("In-Process Data - Expt View", tabName = "in_process_expt_data_page", icon = icon("bar-chart"))#,
                       )
                     ),
                     dashboardBody(
@@ -143,7 +144,49 @@ ui <- dashboardPage(skin = 'blue',
                                          )
                                          
                                 )
-                        )
+                        ),
+                        tabItem(tabName = 'in_process_expt_data_page',
+                                selectInput(
+                                  'in_process_selection',
+                                  label = 'Select Unique Condition IDs',
+                                  choices = df_dsp_purif_stream_results_entity$condition_id_name,
+                                  multiple = FALSE,
+                                  width = '400px'
+                                ),
+                                fluidRow(h4("Data Plots"),
+                                         fluidRow(
+                                           box(
+                                             plotOutput('pH_lineplot')
+                                           ),
+                                           box(
+                                             plotOutput('conductivity_lineplot')
+                                           )
+                                         ),
+                                         fluidRow(
+                                           box(
+                                             downloadButton('pH_download', 'Download Plot')
+                                           ),
+                                           box(
+                                             downloadButton('conductivity_download', 'Download Plot')
+                                           )
+                                         ),fluidRow(
+                                           box(
+                                             plotOutput('od600_lineplot')
+                                           ),
+                                           box(
+                                             plotOutput('total_solids_lineplot')
+                                           )
+                                         ),
+                                         fluidRow(
+                                           box(
+                                             downloadButton('od600_download', 'Download Plot')
+                                           ),
+                                           box(
+                                             downloadButton('total_solids_download', 'Download Plot')
+                                           )
+                                         )
+                                )
+                                )#,
                       )   
                     )
 )
