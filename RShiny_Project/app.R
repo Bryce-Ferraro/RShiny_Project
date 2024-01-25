@@ -1267,7 +1267,318 @@ server <- function(input, output) {
     table
   })
   
+  
+  
+  
+  
+  
+  # Unit Op Membrane INFO
+  
+  output$table <- renderDT({
+    req(input$do_refresh_membrane_tab)
+    datatable(
+      df_dsp_membrane_log_results_entity %>%
+        select(unit_operation_id_name, membrane_id_name,membrane_part_number, nwp_lm2hr),
+      selection = 'multiple', # Enable multiple row selection
+      options = list(
+        paging = FALSE,
+        scrollY = "400px",    # Set the maximum height with a scrollbar
+        scrollCollapse = TRUE,
+        autoWidth = TRUE,      # Automatically adjust column widths
+        columnDefs = list(list(width = '200px', targets = c(0, 1))),  # Set initial column widths
+        rowCallback = JS(
+          "function(row, data, index){",
+          "$('td:eq(0) input', row).on('click', function(e) {",
+          "  Shiny.onInputChange('selectedRows', {",
+          "    id: data[0],",  # Adjust this based on your data structure
+          "    checked: this.checked",
+          "  });",
+          "});",
+          "}"
+        )
+      )
+    )
+  })
+  
+  # Output selected rows
+  output$selectedRows <- render_gt({
+    selected_rows <- input$table_rows_selected # Get selected rows
+    if (!is.null(selected_rows) && length(selected_rows) > 0) {
+      selected_data <- df_dsp_membrane_log_results_entity %>% select(membrane_id_name, unit_operation_id_name) %>% slice(selected_rows)
+      selected_data
+    } else {
+      "No rows selected"
+    }
+  })
+  
+  
+  # NWP vs. Membrane Part Number
+  
+  plotInput <- reactive({
+    # generate bins based on input$bins from ui.R
+    selected_rows <- input$table_rows_selected # Get selected rows
 
+        
+    ggplot(data =  df_dsp_membrane_log_results_entity %>% 
+                         mutate(plot_title = 'Membrane NWP Results') %>%
+                         slice(selected_rows),
+                       aes(x = membrane_part_number, y = nwp_lm2hr, fill = membrane_part_number)) +
+      geom_boxplot() +
+      scale_fill_manual(values=pink_shades) +
+      geom_jitter(color="black", size=1, alpha=0.5) +
+      scale_fill_manual(values=pink_shades) +
+      labs(y = 'NWP (L/m2-hr)', x = 'Membrane Part No.', switch = 'x') +
+      facet_wrap(vars(plot_title)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+  })
+  
+  output$nwp_part_boxplot <- renderPlot({
+    # generate bins based on input$bins from ui.R
+    print(plotInput())
+  })
+  
+  
+  
+  output$nwp_part_download <- downloadHandler(
+    filename = function() {'NWP_vs_Membrane_Part_No.pdf'},
+    content = function(file) {
+      ggsave(file, plot = plotInput(), device = "pdf", width = 7, height = 4, units = "in")
+    }
+  )
+  
+  
+  output$nwp_part_summary <- render_gt({
+    
+    selected_rows <- input$table_rows_selected # Get selected rows
+
+    table <- df_dsp_membrane_log_results_entity %>%
+      slice(selected_rows) %>%
+      select(membrane_part_number, nwp_lm2hr) %>%
+      group_by(membrane_part_number) %>%
+      summarise(Mean = round(mean(nwp_lm2hr, na.rm = TRUE),2),
+                'Std Dev' = round(sd(nwp_lm2hr, na.rm = TRUE),2),
+                CV = round((sd(nwp_lm2hr, na.rm = TRUE) / mean(nwp_lm2hr, na.rm = TRUE)) * 100,2),
+                Min = round(min(nwp_lm2hr, na.rm = TRUE),2),
+                Max = round(max(nwp_lm2hr, na.rm = TRUE),2),
+                'Upper Outlier Level' = round(quantile(nwp_lm2hr, na.rm = TRUE, probs = 0.75) + (1.5 * IQR(nwp_lm2hr,na.rm = TRUE)),2),
+                'Lower Outlier Level' = round(quantile(nwp_lm2hr, na.rm = TRUE, probs = 0.25) - (1.5 * IQR(nwp_lm2hr,na.rm = TRUE)),2)
+      )
+    table
+  })
+  
+  
+  
+  # NWP vs. Membrane ID
+  
+  nwp_mem_id_plotInput <- reactive({
+    
+    selected_rows <- input$table_rows_selected # Get selected rows
+    
+    ggplot(data =  df_dsp_membrane_log_results_entity %>% 
+             mutate(plot_title = 'Membrane NWP Results') %>%
+             slice(selected_rows),
+           aes(x = membrane_id_name, y = nwp_lm2hr, fill = membrane_part_number)) +
+      geom_boxplot() +
+      scale_fill_manual(values=pink_shades) +
+      geom_jitter(color="black", size=1, alpha=0.5) +
+      scale_fill_manual(values=pink_shades) +
+      labs(y = 'NWP (L/m2-hr)', x = 'Membrane ID Name.', switch = 'x') +
+      facet_wrap(vars(plot_title)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+    
+    
+  })
+  
+  output$nwp_mem_id_boxplot <- renderPlot({
+    
+    print(nwp_mem_id_plotInput())
+    
+  })
+  
+  output$nwp_mem_id_download <- downloadHandler(
+    filename = function() {'NWP_vs_Membrane_ID.pdf'},
+    content = function(file) {
+      ggsave(file, plot = nwp_mem_id_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  
+  output$nwp_mem_id_summary <- render_gt({
+    
+    selected_rows <- input$table_rows_selected # Get selected rows
+
+    table <- df_dsp_membrane_log_results_entity %>%
+      slice(selected_rows) %>%
+      select(membrane_id_name, nwp_lm2hr) %>%
+      group_by(membrane_id_name) %>%
+      summarise(Mean = round(mean(nwp_lm2hr, na.rm = TRUE),2),
+                'Std Dev' = round(sd(nwp_lm2hr, na.rm = TRUE),2),
+                CV = round((sd(nwp_lm2hr, na.rm = TRUE) / mean(nwp_lm2hr, na.rm = TRUE)) * 100,2),
+                Min = round(min(nwp_lm2hr, na.rm = TRUE),2),
+                Max = round(max(nwp_lm2hr, na.rm = TRUE),2),
+                'Upper Outlier Level' = round(quantile(nwp_lm2hr, na.rm = TRUE, probs = 0.75) + (1.5 * IQR(nwp_lm2hr,na.rm = TRUE)),2),
+                'Lower Outlier Level' = round(quantile(nwp_lm2hr, na.rm = TRUE, probs = 0.25) - (1.5 * IQR(nwp_lm2hr,na.rm = TRUE)),2)
+      )
+    table
+  })
+  
+  
+  
+  
+  # NWP vs. Unit Op ID
+  
+  nwp_mem_exp_plotInput <- reactive({
+    
+    selected_rows <- input$table_rows_selected # Get selected rows
+    
+    ggplot(data =  df_dsp_membrane_log_results_entity %>% 
+             mutate(plot_title = 'Membrane NWP Results') %>%
+             slice(selected_rows),
+           aes(x = unit_operation_id_name, y = nwp_lm2hr, fill = membrane_id_name)) +
+      geom_bar(stat="identity") +
+      scale_fill_manual(values=pink_shades) +
+      labs(y = 'NWP (L/m2-hr)', x = '', switch = 'x') +
+      facet_grid(~membrane_id_name, scales = 'free_x', space = 'free') +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+    
+    
+    
+  })
+  
+  output$nwp_mem_exp_barplot <- renderPlot({
+    
+    print(nwp_mem_exp_plotInput())
+    
+  })
+  
+  output$nwp_mem_exp_download <- downloadHandler(
+    filename = function() {'NWP_vs_Unit_Op_ID.pdf'},
+    content = function(file) {
+      ggsave(file, plot = nwp_mem_exp_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  
+  output$nwp_mem_exp_summary <- render_gt({
+    
+    selected_rows <- input$table_rows_selected # Get selected rows
+
+    table <- df_dsp_membrane_log_results_entity %>%
+      slice(selected_rows) %>%
+      select(membrane_id_name, nwp_lm2hr) %>%
+      group_by(membrane_id_name) %>%
+      summarise(Mean = round(mean(nwp_lm2hr, na.rm = TRUE),2),
+                'Std Dev' = round(sd(nwp_lm2hr, na.rm = TRUE),2),
+                CV = round((sd(nwp_lm2hr, na.rm = TRUE) / mean(nwp_lm2hr, na.rm = TRUE)) * 100,2),
+                Min = round(min(nwp_lm2hr, na.rm = TRUE),2),
+                Max = round(max(nwp_lm2hr, na.rm = TRUE),2),
+                'Upper Outlier Level' = round(quantile(nwp_lm2hr, na.rm = TRUE, probs = 0.75) + (1.5 * IQR(nwp_lm2hr,na.rm = TRUE)),2),
+                'Lower Outlier Level' = round(quantile(nwp_lm2hr, na.rm = TRUE, probs = 0.25) - (1.5 * IQR(nwp_lm2hr,na.rm = TRUE)),2)
+      )
+    table
+  })
+  
+  
+  # NWP vs. SA
+  
+  nwp_area_boxplot_plotInput <- reactive({
+    
+    selected_rows <- input$table_rows_selected # Get selected rows
+    
+    ggplot(data =  df_dsp_membrane_log_results_entity %>% 
+             mutate(plot_title = 'Membrane NWP Results',
+                    membrane_area_m2 = as.character(membrane_area_m2)
+             ) %>%
+             slice(selected_rows),
+           aes(x = membrane_area_m2, y = nwp_lm2hr, fill = membrane_area_m2)) +
+      geom_boxplot() +
+      scale_fill_manual(values=pink_shades) +
+      geom_jitter(color="black", size=1, alpha=0.5) +
+      labs(y = 'NWP (L/m2-hr)', x = 'Membrane Area (m2)', switch = 'x') +
+      facet_wrap(vars(plot_title)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+    
+  })
+  
+  output$nwp_area_boxplot <- renderPlot({
+    
+    print(nwp_area_boxplot_plotInput())
+    
+  })
+  
+  output$nwp_area_download <- downloadHandler(
+    filename = function() {'NWP_vs_Surface_Area.pdf'},
+    content = function(file) {
+      ggsave(file, plot = nwp_area_boxplot_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  
+  
+  output$nwp_area_summary <- render_gt({
+    
+    selected_rows <- input$table_rows_selected # Get selected rows
+
+    table <- df_dsp_membrane_log_results_entity %>%
+      slice(selected_rows) %>%
+      select(membrane_area_m2, nwp_lm2hr) %>%
+      group_by(membrane_area_m2) %>%
+      summarise(Mean = round(mean(nwp_lm2hr, na.rm = TRUE),2),
+                'Std Dev' = round(sd(nwp_lm2hr, na.rm = TRUE),2),
+                CV = round((sd(nwp_lm2hr, na.rm = TRUE) / mean(nwp_lm2hr, na.rm = TRUE)) * 100,2),
+                Min = round(min(nwp_lm2hr, na.rm = TRUE),2),
+                Max = round(max(nwp_lm2hr, na.rm = TRUE),2),
+                'Upper Outlier Level' = round(quantile(nwp_lm2hr, na.rm = TRUE, probs = 0.75) + (1.5 * IQR(nwp_lm2hr,na.rm = TRUE)),2),
+                'Lower Outlier Level' = round(quantile(nwp_lm2hr, na.rm = TRUE, probs = 0.25) - (1.5 * IQR(nwp_lm2hr,na.rm = TRUE)),2)
+      )
+    table
+  })
+  
+  # Number of Uses
+  
+  
+  
+  uses_mem_id_plotInput <- reactive({
+    
+    selected_rows <- input$table_rows_selected # Get selected rows
+    
+    ggplot(data =  df_dsp_membrane_log_results_entity %>%
+             group_by(membrane_id_name) %>%
+             count() %>% 
+             filter(membrane_id_name %in% df_dsp_membrane_log_results_entity[selected_rows, "membrane_id_name"]) %>%
+             mutate(plot_title = 'Membrane NWP Results'),
+           aes(x = reorder(membrane_id_name,+n), y = n, fill = n)) +
+      geom_bar(stat="identity") +
+      scale_fill_continuous() +
+      labs(y = 'Number of Uses', x = 'Membrane ID', switch = 'x') +
+      facet_wrap(vars(plot_title)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+    
+    
+  })
+  
+  output$uses_mem_id_barplot <- renderPlot({
+    
+    print(uses_mem_id_plotInput())
+    
+  })
+  
+  output$uses_mem_id_download <- downloadHandler(
+    filename = function() {'Membrane_Usage.pdf'},
+    content = function(file) {
+      ggsave(file, plot = uses_mem_id_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
 
 }
 
