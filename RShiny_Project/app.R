@@ -1777,6 +1777,10 @@ server <- function(input, output) {
   
   flux_time_plotInput <- reactive({
     
+    validate(
+      need(input$ts_selection , "No data selected")
+    )
+    
     selected_run_ids <- input$ts_selection 
     
     ggplot(
@@ -1815,6 +1819,10 @@ server <- function(input, output) {
   
   flux_conc_plotInput <- reactive({
     
+    validate(
+      need(input$ts_selection , "No data selected")
+    )
+    
     selected_run_ids <- input$ts_selection 
     
     ggplot(
@@ -1852,6 +1860,10 @@ server <- function(input, output) {
   
   flux_dia_plotInput <- reactive({
     
+    validate(
+      need(input$ts_selection , "No data selected")
+    )
+    
     selected_run_ids <- input$ts_selection 
     
     ggplot(
@@ -1888,6 +1900,10 @@ server <- function(input, output) {
   # TMP vs. Time
   
   tmp_time_plotInput <- reactive({
+    
+    validate(
+      need(input$ts_selection , "No data selected")
+    )
     
     selected_run_ids <- input$ts_selection 
     
