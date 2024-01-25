@@ -63,7 +63,8 @@ ui <- dashboardPage(skin = 'blue',
                         menuItem("In-Process Data - Stream View", tabName = "in_process_stream_data_page", icon = icon("bar-chart")),
                         menuItem("Membrane Data", tabName = "membrane_page", icon = icon("table")),
                         menuItem("Unit Op Time-Series", tabName = "ts_page", icon = icon("table")),
-                        menuItem("Process Flow Diagrams", tabName = "pfd_page", icon = icon("bar-chart"))
+                        menuItem("Process Flow Diagrams", tabName = "pfd_page", icon = icon("bar-chart")),
+                        menuItem("Data Download", tabName = "data_download_page", icon = icon("bar-chart"))
                       )
                     ),
                     dashboardBody(
