@@ -418,6 +418,55 @@ ui <- dashboardPage(skin = 'blue',
                                 plotOutput('pfd_plot'),
                                 downloadButton('pfd_download', 'Download Plot')
                                 
+                        ),
+                        tabItem(tabName = 'data_download_page',
+                                fluidRow(
+                                  box(width = 12,
+                                      title = "DSP Purification Stream Data",
+                                      selectInput(
+                                        'dsp_streams_data_download_selection',
+                                        label = 'Select Unique Experiments IDs',
+                                        choices = df_dsp_purif_stream_results_entity$experiment_id_name,
+                                        multiple = TRUE,
+                                        width = '400px'
+                                      ),
+                                      downloadButton("dsp_streams_data_download_selection_button", "Download Selected Experiments' Data"),
+                                      downloadButton("dsp_streams_data_download_total_button", "Download All Experiments' Data")
+                                      
+                                  )
+                                ),
+                                
+                                fluidRow(
+                                  box(width = 12,
+                                      title = "Membrane Log Data",
+                                      selectInput(
+                                        'membrane_data_download_selection',
+                                        label = 'Select Unique Membrane IDs',
+                                        choices = df_dsp_membrane_log_results_entity$membrane_id_name,
+                                        multiple = TRUE,
+                                        width = '400px'
+                                      ),
+                                      downloadButton("membrane_data_download_selection_button", "Download Selected Membranes' Data"),
+                                      downloadButton("membrane_data_download_total_button", "Download All Membranes' Data")
+                                      
+                                  )
+                                ),
+                                
+                                fluidRow(
+                                  box(width = 12,
+                                      title = "Time-Series Data",
+                                      selectInput(
+                                        'ts_data_download_selection',
+                                        label = 'Select Unique Run IDs',
+                                        choices = df_dsp_filter_ts$TRIAL_IDUNITS,
+                                        multiple = TRUE,
+                                        width = '400px'
+                                      ),
+                                      downloadButton("ts_data_download_selection_button", "Download Selected Runs' Data")
+                                      
+                                      
+                                  )
+                                )
                         )
                         
                       )   
