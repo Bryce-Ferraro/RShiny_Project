@@ -507,7 +507,10 @@ server <- function(input, output) {
   
   # Output selected rows
   output$dsp_kpi_selectedRows <- render_gt({
-    dsp_kpi_selected_rows <- input$dsp_kpi_table_rows_selected # Get selected rows
+    validate(
+      need(input$dsp_kpi_table_rows_selected , "Please select data")
+    )
+    dsp_kpi_selected_rows <- input$dsp_kpi_table_rows_selected 
     if (!is.null(dsp_kpi_selected_rows) && length(dsp_kpi_selected_rows) > 0) {
       dsp_kpi_selected_data <- df_dsp_purif_stream_results_entity_product %>% select(unit_operation_id_name, experiment_id_name) %>% slice(dsp_kpi_selected_rows)
       dsp_kpi_selected_data
@@ -524,6 +527,10 @@ server <- function(input, output) {
   # Unit Operation ID vs. Step Recovery
   
   step_unit_op_id_plotInput <- reactive({
+    
+    validate(
+      need(input$dsp_kpi_table_rows_selected , "No data selected")
+    )
     
     selected_rows <<- input$dsp_kpi_table_rows_selected 
     
@@ -560,6 +567,10 @@ server <- function(input, output) {
   # Unit Operation ID vs. Mass Balance
   
   mass_balance_unit_op_id_plotInput <- reactive({
+    
+    validate(
+      need(input$dsp_kpi_table_rows_selected , "No data selected")
+    )
     
     selected_rows <- input$dsp_kpi_table_rows_selected 
     
@@ -599,6 +610,10 @@ server <- function(input, output) {
   # Unit Operation ID vs. Step Recovery/Mass Balance
   
   step_mass_combo_unit_op_type_plotInput <- reactive({
+    
+    validate(
+      need(input$dsp_kpi_table_rows_selected , "No data selected")
+    )
     
     selected_rows <- input$dsp_kpi_table_rows_selected 
     
@@ -657,6 +672,10 @@ server <- function(input, output) {
   
   
   step_unit_op_type_plotInput <- reactive({
+    
+    validate(
+      need(input$dsp_kpi_table_rows_selected , "No data selected")
+    )
     
     selected_rows <- input$dsp_kpi_table_rows_selected 
     
@@ -740,6 +759,10 @@ server <- function(input, output) {
   
   
   mass_balance_unit_op_type_plotInput <- reactive({
+    
+    validate(
+      need(input$dsp_kpi_table_rows_selected , "No data selected")
+    )
     
     selected_rows <- input$dsp_kpi_table_rows_selected 
     
@@ -1973,6 +1996,7 @@ server <- function(input, output) {
       
       download_data = df_dsp_filter_ts %>%
         filter(TRIAL_IDUNITS %in% selected_run_ids)
+      
 
       write.csv(download_data, file, row.names = FALSE)
     }
