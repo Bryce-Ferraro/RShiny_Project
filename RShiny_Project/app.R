@@ -405,7 +405,20 @@ ui <- dashboardPage(skin = 'blue',
                                 )
                                 
                                 
+                        ),
+                        tabItem(tabName = "pfd_page",
+                                selectInput(
+                                  'pfd_selection',
+                                  label = 'Select Experiment IDs',
+                                  choices = df_dsp_purif_stream_results_entity$experiment_id_name,
+                                  multiple = FALSE,
+                                  width = '400px'
+                                ),
+                                plotOutput('pfd_plot'),
+                                downloadButton('pfd_download', 'Download Plot')
+                                
                         )
+                        
                       )   
                     )
 )
