@@ -1627,7 +1627,8 @@ server <- function(input, output) {
       labs(y = 'NWP (L/m2-hr)', x = '', switch = 'x') +
       facet_grid(~membrane_id_name, scales = 'free_x', space = 'free') +
       theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
-      theme(text = element_text(size = 16))
+      theme(text = element_text(size = 16)) + 
+      theme(strip.text.x = element_blank())
     
     
     
