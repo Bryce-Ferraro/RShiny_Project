@@ -1470,6 +1470,11 @@ server <- function(input, output) {
   
   # Output selected rows
   output$selectedRows <- render_gt({
+    
+    validate(
+      need(input$table_rows_selected , "Please select data")
+    )
+    
     selected_rows <- input$table_rows_selected # Get selected rows
     if (!is.null(selected_rows) && length(selected_rows) > 0) {
       selected_data <- df_dsp_membrane_log_results_entity %>% select(membrane_id_name, unit_operation_id_name) %>% slice(selected_rows)
@@ -1483,8 +1488,12 @@ server <- function(input, output) {
   # NWP vs. Membrane Part Number
   
   plotInput <- reactive({
-    # generate bins based on input$bins from ui.R
-    selected_rows <- input$table_rows_selected # Get selected rows
+    
+    validate(
+      need(input$table_rows_selected , "No data selected")
+    )
+    
+    selected_rows <- input$table_rows_selected 
 
         
     ggplot(data =  df_dsp_membrane_log_results_entity %>% 
@@ -1502,7 +1511,6 @@ server <- function(input, output) {
   })
   
   output$nwp_part_boxplot <- renderPlot({
-    # generate bins based on input$bins from ui.R
     print(plotInput())
   })
   
@@ -1518,7 +1526,7 @@ server <- function(input, output) {
   
   output$nwp_part_summary <- render_gt({
     
-    selected_rows <- input$table_rows_selected # Get selected rows
+    selected_rows <- input$table_rows_selected 
 
     table <- df_dsp_membrane_log_results_entity %>%
       slice(selected_rows) %>%
@@ -1541,7 +1549,11 @@ server <- function(input, output) {
   
   nwp_mem_id_plotInput <- reactive({
     
-    selected_rows <- input$table_rows_selected # Get selected rows
+    validate(
+      need(input$table_rows_selected , "No data selected")
+    )
+    
+    selected_rows <- input$table_rows_selected 
     
     ggplot(data =  df_dsp_membrane_log_results_entity %>% 
              mutate(plot_title = 'Membrane NWP Results') %>%
@@ -1551,7 +1563,7 @@ server <- function(input, output) {
       scale_fill_manual(values=pink_shades) +
       geom_jitter(color="black", size=1, alpha=0.5) +
       scale_fill_manual(values=pink_shades) +
-      labs(y = 'NWP (L/m2-hr)', x = 'Membrane ID Name.', switch = 'x') +
+      labs(y = 'NWP (L/m2-hr)', x = 'Membrane ID Name', switch = 'x') +
       facet_wrap(vars(plot_title)) +
       theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
       theme(text = element_text(size = 16))
@@ -1576,7 +1588,7 @@ server <- function(input, output) {
   
   output$nwp_mem_id_summary <- render_gt({
     
-    selected_rows <- input$table_rows_selected # Get selected rows
+    selected_rows <- input$table_rows_selected 
 
     table <- df_dsp_membrane_log_results_entity %>%
       slice(selected_rows) %>%
@@ -1600,7 +1612,11 @@ server <- function(input, output) {
   
   nwp_mem_exp_plotInput <- reactive({
     
-    selected_rows <- input$table_rows_selected # Get selected rows
+    validate(
+      need(input$table_rows_selected , "No data selected")
+    )
+    
+    selected_rows <- input$table_rows_selected 
     
     ggplot(data =  df_dsp_membrane_log_results_entity %>% 
              mutate(plot_title = 'Membrane NWP Results') %>%
@@ -1656,7 +1672,11 @@ server <- function(input, output) {
   
   nwp_area_boxplot_plotInput <- reactive({
     
-    selected_rows <- input$table_rows_selected # Get selected rows
+    validate(
+      need(input$table_rows_selected , "No data selected")
+    )
+    
+    selected_rows <- input$table_rows_selected 
     
     ggplot(data =  df_dsp_membrane_log_results_entity %>% 
              mutate(plot_title = 'Membrane NWP Results',
@@ -1692,7 +1712,7 @@ server <- function(input, output) {
   
   output$nwp_area_summary <- render_gt({
     
-    selected_rows <- input$table_rows_selected # Get selected rows
+    selected_rows <- input$table_rows_selected 
 
     table <- df_dsp_membrane_log_results_entity %>%
       slice(selected_rows) %>%
@@ -1712,10 +1732,13 @@ server <- function(input, output) {
   # Number of Uses
   
   
-  
   uses_mem_id_plotInput <- reactive({
     
-    selected_rows <- input$table_rows_selected # Get selected rows
+    validate(
+      need(input$table_rows_selected , "No data selected")
+    )
+    
+    selected_rows <- input$table_rows_selected 
     
     ggplot(data =  df_dsp_membrane_log_results_entity %>%
              group_by(membrane_id_name) %>%
