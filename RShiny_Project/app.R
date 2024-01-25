@@ -61,7 +61,7 @@ ui <- dashboardPage(skin = 'blue',
                         menuItem("DSP KPI", tabName = "dsp_kpi_page", icon = icon("bar-chart")),
                         menuItem("In-Process Data - Expt View", tabName = "in_process_expt_data_page", icon = icon("bar-chart")),
                         menuItem("In-Process Data - Stream View", tabName = "in_process_stream_data_page", icon = icon("bar-chart")),
-                        menuItem("TFF Membrane", tabName = "tff_membrane_page", icon = icon("table"))
+                        menuItem("Membrane Data", tabName = "membrane_page", icon = icon("table"))
                       )
                     ),
                     dashboardBody(
@@ -272,7 +272,94 @@ ui <- dashboardPage(skin = 'blue',
                                 )
                                 
                                 
-                        )#,
+                        ),
+                        tabItem(tabName = 'membrane_page',
+                                fluidRow(h4("Data Selection"),
+                                         box(
+                                           width = 12,
+                                           
+                                           box(
+                                             column(
+                                               width = 12,
+                                               DT::dataTableOutput("table"),
+                                               actionButton("do_refresh_membrane_tab", "Load data")
+                                             )),
+                                           box(
+                                             column(
+                                               width = 12,
+                                               tableOutput("selectedRows") # Selected rows on the right side
+                                               
+                                               
+                                             )
+                                           )
+                                           
+                                         )
+                                         
+                                ),
+                                fluidRow(h4("Data Plots"),
+                                         tabsetPanel(
+                                           tabPanel("NWP - Part No.",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('nwp_part_boxplot')
+                                                      ),
+                                                      box(
+                                                        tableOutput('nwp_part_summary')
+                                                      )
+                                                    ),
+                                                    downloadButton('nwp_part_download', 'Download Plot'),
+                                                    
+                                                    
+                                           ),
+                                           tabPanel("NWP - Membrane ID",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('nwp_mem_id_boxplot')
+                                                      ),
+                                                      box(
+                                                        tableOutput('nwp_mem_id_summary')
+                                                      )
+                                                    ),
+                                                    downloadButton('nwp_mem_id_download', 'Download Plot'),
+                                                    
+                                           ),
+                                           tabPanel("NWP - Membrane ID/Experiment",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('nwp_mem_exp_barplot')
+                                                      ),
+                                                      box(
+                                                        tableOutput('nwp_mem_exp_summary')
+                                                      )
+                                                    ),
+                                                    downloadButton('nwp_mem_exp_download', 'Download Plot'),
+                                                    
+                                                    
+                                                    
+                                                    
+                                           ),
+                                           tabPanel("NWP - Membrane Surface Area",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('nwp_area_boxplot')
+                                                      ),
+                                                      box(
+                                                        tableOutput('nwp_area_summary')
+                                                      )
+                                                    ),
+                                                    downloadButton('nwp_area_download', 'Download Plot'),
+                                                    
+                                                    
+                                                    
+                                           ),
+                                           tabPanel("Usage Count - Membrane ID",
+                                                    plotOutput('uses_mem_id_barplot'),
+                                                    downloadButton('uses_mem_id_download', 'Download Plot')
+                                           )
+                                           
+                                         )
+                                )
+                        )
                       )   
                     )
 )
