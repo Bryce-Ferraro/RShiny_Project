@@ -823,7 +823,7 @@ server <- function(input, output) {
   
   output$mass_balance_unit_op_type_summary <- render_gt({
     
-    selected_rows <- input$dsp_kpi_table_rows_selected # Get selected rows
+    selected_rows <- input$dsp_kpi_table_rows_selected 
     
     table <- df_dsp_purif_stream_results_entity_product %>%
       slice(selected_rows) %>%
@@ -843,12 +843,15 @@ server <- function(input, output) {
   
   
   # In-Process Data - Experimental View
-  
-  
-  
+
   # Line graph for pH throughput experiment
   
   pH_plotInput <- reactive({
+    
+    validate(
+      need(input$in_process_selection , "No data selected")
+    )
+    
     selected_condition_ids <- input$in_process_selection 
     
     ggplot(
@@ -888,7 +891,11 @@ server <- function(input, output) {
   
   conductivity_plotInput <- reactive({
     
-    selected_condition_ids <- input$in_process_selection # Get selected rows
+    validate(
+      need(input$in_process_selection , "No data selected")
+    )
+    
+    selected_condition_ids <- input$in_process_selection
     
     ggplot(
       data = df_dsp_purif_stream_results_entity %>%
@@ -927,7 +934,11 @@ server <- function(input, output) {
   
   od600_plotInput <- reactive({
     
-    selected_condition_ids <- input$in_process_selection # Get selected rows
+    validate(
+      need(input$in_process_selection , "No data selected")
+    )
+    
+    selected_condition_ids <- input$in_process_selection
     
     ggplot(
       data = df_dsp_purif_stream_results_entity %>%
@@ -966,7 +977,11 @@ server <- function(input, output) {
   
   total_solids_plotInput <- reactive({
     
-    selected_condition_ids <- input$in_process_selection # Get selected rows
+    validate(
+      need(input$in_process_selection , "No data selected")
+    )
+    
+    selected_condition_ids <- input$in_process_selection
     
     ggplot(
       data = df_dsp_purif_stream_results_entity %>%
@@ -2001,8 +2016,6 @@ server <- function(input, output) {
       write.csv(download_data, file, row.names = FALSE)
     }
   )
-  
-  
 
 }
 
