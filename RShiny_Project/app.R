@@ -638,7 +638,7 @@ server <- function(input, output) {
                KPI = gsub('_', ' ', KPI),
                KPI = str_to_title(KPI),
                KPI = gsub('Hplc','HPLC',KPI),
-               plot_title = 'Step Recovery/Mass Balance vs. Unit Op ID'),
+               plot_title = 'Step Recovery/Mass Balance'),
            
            aes(x = reorder(unit_operation_id_name,unit_operation_number), y = value, fill = KPI)) +
       geom_bar(stat="identity", position = position_dodge2(reverse = TRUE)) +
