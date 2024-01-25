@@ -360,6 +360,50 @@ ui <- dashboardPage(skin = 'blue',
                                            
                                          )
                                 )
+                        ),
+                        tabItem(tabName = 'ts_page',
+                                selectInput(
+                                  'ts_selection',
+                                  label = 'Select Run ID',
+                                  choices = df_dsp_filter_ts$TRIAL_IDUNITS,
+                                  multiple = TRUE,
+                                  width = '400px'
+                                ),
+                                fluidRow(h4("Data Plots"),
+                                         fluidRow(
+                                           box(
+                                             plotOutput('flux_time_scatterplot')
+                                           ),
+                                           box(
+                                             plotOutput('flux_conc_scatterplot')
+                                           )
+                                         ),
+                                         fluidRow(
+                                           box(
+                                             downloadButton('flux_time_download', 'Download Plot')
+                                           ),
+                                           box(
+                                             downloadButton('flux_conc_download', 'Download Plot')
+                                           )
+                                         ),fluidRow(
+                                           box(
+                                             plotOutput('flux_dia_scatterplot')
+                                           ),
+                                           box(
+                                             plotOutput('tmp_time_scatterplot')
+                                           )
+                                         ),
+                                         fluidRow(
+                                           box(
+                                             downloadButton('flux_dia_download', 'Download Plot')
+                                           ),
+                                           box(
+                                             downloadButton('tmp_time_download', 'Download Plot')
+                                           )
+                                         )
+                                )
+                                
+                                
                         )
                       )   
                     )
