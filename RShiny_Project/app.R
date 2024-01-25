@@ -780,6 +780,406 @@ server <- function(input, output) {
     }
   )
   
+  
+  
+  
+  # In-Process Data - Stream View
+  
+  # Data selection
+  
+  
+  output$in_process_stream_table <- DT::renderDataTable({
+    req(input$do_refresh_in_process_stream_tab)
+    DT::datatable(
+      df_dsp_purif_stream_results_entity %>%
+        select(sample_id_name, experiment_id_name),
+      selection = 'multiple', # Enable multiple row selection
+      options = list(
+        paging = FALSE,
+        scrollY = "400px",    # Set the maximum height with a scrollbar
+        scrollCollapse = TRUE,
+        autoWidth = TRUE,      # Automatically adjust column widths
+        columnDefs = list(list(width = '200px', targets = c(0, 1))),  # Set initial column widths
+        rowCallback = JS(
+          "function(row, data, index){",
+          "$('td:eq(0) input', row).on('click', function(e) {",
+          "  Shiny.onInputChange('in_process_stream_selectedRows', {",
+          "    id: data[0],",  # Adjust this based on your data structure
+          "    checked: this.checked",
+          "  });",
+          "});",
+          "}"
+        )
+      )
+    )
+  })
+  
+  # Output selected rows
+  output$in_process_stream_selectedRows <- render_gt({
+    in_process_stream_selected_rows <- input$in_process_stream_table_rows_selected # Get selected rows
+    if (!is.null(in_process_stream_selected_rows) && length(in_process_stream_selected_rows) > 0) {
+      in_process_stream_selected_data <- df_dsp_purif_stream_results_entity %>% select(sample_id_name, experiment_id_name) %>% slice(in_process_stream_selected_rows)
+      in_process_stream_selected_data
+    } else {
+      "No rows selected"
+    }
+  })
+  
+  
+  
+  
+  # pH vs. Stream Type - Boxplot
+  
+  
+  
+  pH_stream_plotInput <- reactive({
+    
+    selected_rows <- input$in_process_stream_table_rows_selected
+    
+    ggplot(data =  df_dsp_purif_stream_results_entity %>%
+             slice(selected_rows) %>%
+             mutate(unit_operation_stream_type = paste(unit_operation_type, stream, sep='-')) %>%
+             select(
+               unit_operation_stream_type,
+               unit_operation_number,
+               ph,
+               conductivity_mscm,
+               od600,
+               total_solids_gkg
+             ) %>%
+             filter(!is.na(unit_operation_stream_type)) %>%
+             group_by(unit_operation_stream_type) %>%
+             summarise(mean_unit_operation_number = mean(unit_operation_number, na.rm = TRUE),
+                       mean_pH = mean(ph, na.rm = TRUE),
+                       mean_conductivity_mscm = mean(conductivity_mscm, na.rm = TRUE),
+                       mean_od600 = mean(od600, na.rm = TRUE),
+                       mean_total_solids_gkg = mean(total_solids_gkg, na.rm = TRUE),
+                       stdev_ph = sd(ph, na.rm = TRUE),
+                       stdev_conductivity_mscm = sd(conductivity_mscm, na.rm = TRUE),
+                       stdev_od600 = sd(od600, na.rm = TRUE),
+                       stdev_total_solids_gkg = sd(total_solids_gkg, na.rm = TRUE)
+             ) %>%
+             mutate(plot_title = 'pH vs. Stream Type'),
+           aes(x = reorder(unit_operation_stream_type, mean_unit_operation_number), y = mean_pH, fill = unit_operation_stream_type)) +
+      geom_bar(stat="identity") +
+      geom_errorbar(aes(
+        ymin = mean_pH - stdev_ph,
+        ymax = mean_pH + stdev_ph,
+        width = 0.4
+      )
+      ) +
+      scale_fill_manual(values=pink_shades) +
+      labs(y = 'pH', x = 'Stream Type') +
+      facet_wrap(vars(plot_title)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+    
+    
+  })
+  
+  output$pH_stream_boxplot <- renderPlot({
+    
+    print(pH_stream_plotInput())
+    
+  })
+  
+  output$pH_stream_download <- downloadHandler(
+    filename = function() {'pH_stream.pdf'},
+    content = function(file) {
+      ggsave(file, plot = pH_stream_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  
+  
+  output$pH_stream_summary <- render_gt({
+    
+    selected_rows <- input$in_process_stream_table_rows_selected
+    
+    table <- df_dsp_purif_stream_results_entity %>%
+      slice(selected_rows) %>%
+      mutate(unit_operation_stream_type = paste(unit_operation_type, stream, sep='-')) %>%
+      select(unit_operation_stream_type, ph) %>%
+      group_by(unit_operation_stream_type) %>%
+      summarise(Mean = round(mean(ph, na.rm = TRUE),2),
+                'Std Dev' = round(sd(ph, na.rm = TRUE),2),
+                CV = round((sd(ph, na.rm = TRUE) / mean(ph, na.rm = TRUE)) * 100,2),
+                Min = round(min(ph, na.rm = TRUE),2),
+                Max = round(max(ph, na.rm = TRUE),2),
+                'Upper Outlier Level' = round(quantile(ph, na.rm = TRUE, probs = 0.75) + (1.5 * IQR(ph,na.rm = TRUE)),2),
+                'Lower Outlier Level' = round(quantile(ph, na.rm = TRUE, probs = 0.25) - (1.5 * IQR(ph,na.rm = TRUE)),2)
+      )
+    table
+  })
+  
+  
+  
+  
+  
+  # Conductivity vs. Stream Type - Boxplot
+  
+  
+  
+  conductivity_stream_plotInput <- reactive({
+    
+    selected_rows <- input$in_process_stream_table_rows_selected
+    
+    ggplot(data =  df_dsp_purif_stream_results_entity %>%
+             slice(selected_rows) %>%
+             mutate(unit_operation_stream_type = paste(unit_operation_type, stream, sep='-')) %>%
+             select(
+               unit_operation_stream_type,
+               unit_operation_number,
+               ph,
+               conductivity_mscm,
+               od600,
+               total_solids_gkg
+             ) %>%
+             filter(!is.na(unit_operation_stream_type)) %>%
+             group_by(unit_operation_stream_type) %>%
+             summarise(mean_unit_operation_number = mean(unit_operation_number, na.rm = TRUE),
+                       mean_pH = mean(ph, na.rm = TRUE),
+                       mean_conductivity_mscm = mean(conductivity_mscm, na.rm = TRUE),
+                       mean_od600 = mean(od600, na.rm = TRUE),
+                       mean_total_solids_gkg = mean(total_solids_gkg, na.rm = TRUE),
+                       stdev_ph = sd(ph, na.rm = TRUE),
+                       stdev_conductivity_mscm = sd(conductivity_mscm, na.rm = TRUE),
+                       stdev_od600 = sd(od600, na.rm = TRUE),
+                       stdev_total_solids_gkg = sd(total_solids_gkg, na.rm = TRUE)
+             ) %>%
+             mutate(plot_title = 'Conductivity vs. Stream Type'),
+           aes(x = reorder(unit_operation_stream_type, mean_unit_operation_number), y = mean_conductivity_mscm, fill = unit_operation_stream_type)) +
+      geom_bar(stat="identity") +
+      geom_errorbar(aes(
+        ymin = mean_conductivity_mscm - stdev_conductivity_mscm,
+        ymax = mean_conductivity_mscm + stdev_conductivity_mscm,
+        width = 0.4
+      )
+      ) +
+      scale_fill_manual(values=pink_shades) +
+      labs(y = 'Conductivity (mS/cm)', x = 'Stream Type') +
+      facet_wrap(vars(plot_title)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+    
+    
+  })
+  
+  output$conductivity_stream_boxplot <- renderPlot({
+    
+    print(conductivity_stream_plotInput())
+    
+  })
+  
+  output$conductivity_stream_download <- downloadHandler(
+    filename = function() {'Conductivity_stream.pdf'},
+    content = function(file) {
+      ggsave(file, plot = conductivity_stream_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  
+  
+  output$conductivity_stream_summary <- render_gt({
+    
+    selected_rows <- input$in_process_stream_table_rows_selected
+    
+    table <- df_dsp_purif_stream_results_entity %>%
+      slice(selected_rows) %>%
+      mutate(unit_operation_stream_type = paste(unit_operation_type, stream, sep='-')) %>%
+      select(unit_operation_stream_type, conductivity_mscm) %>%
+      group_by(unit_operation_stream_type) %>%
+      summarise(Mean = round(mean(conductivity_mscm, na.rm = TRUE),2),
+                'Std Dev' = round(sd(conductivity_mscm, na.rm = TRUE),2),
+                CV = round((sd(conductivity_mscm, na.rm = TRUE) / mean(conductivity_mscm, na.rm = TRUE)) * 100,2),
+                Min = round(min(conductivity_mscm, na.rm = TRUE),2),
+                Max = round(max(conductivity_mscm, na.rm = TRUE),2),
+                'Upper Outlier Level' = round(quantile(conductivity_mscm, na.rm = TRUE, probs = 0.75) + (1.5 * IQR(conductivity_mscm,na.rm = TRUE)),2),
+                'Lower Outlier Level' = round(quantile(conductivity_mscm, na.rm = TRUE, probs = 0.25) - (1.5 * IQR(conductivity_mscm,na.rm = TRUE)),2)
+      )
+    table
+  })
+  
+  
+  
+  
+  # OD600 vs. Stream Type - Boxplot
+  
+  
+  
+  od600_stream_plotInput <- reactive({
+    
+    selected_rows <- input$in_process_stream_table_rows_selected
+    
+    ggplot(data =  df_dsp_purif_stream_results_entity %>%
+             slice(selected_rows) %>%
+             mutate(unit_operation_stream_type = paste(unit_operation_type, stream, sep='-')) %>%
+             select(
+               unit_operation_stream_type,
+               unit_operation_number,
+               ph,
+               conductivity_mscm,
+               od600,
+               total_solids_gkg
+             ) %>%
+             filter(!is.na(unit_operation_stream_type)) %>%
+             group_by(unit_operation_stream_type) %>%
+             summarise(mean_unit_operation_number = mean(unit_operation_number, na.rm = TRUE),
+                       mean_pH = mean(ph, na.rm = TRUE),
+                       mean_conductivity_mscm = mean(conductivity_mscm, na.rm = TRUE),
+                       mean_od600 = mean(od600, na.rm = TRUE),
+                       mean_total_solids_gkg = mean(total_solids_gkg, na.rm = TRUE),
+                       stdev_ph = sd(ph, na.rm = TRUE),
+                       stdev_conductivity_mscm = sd(conductivity_mscm, na.rm = TRUE),
+                       stdev_od600 = sd(od600, na.rm = TRUE),
+                       stdev_total_solids_gkg = sd(total_solids_gkg, na.rm = TRUE)
+             ) %>%
+             mutate(plot_title = 'OD600 vs. Stream Type'),
+           aes(x = reorder(unit_operation_stream_type, mean_unit_operation_number), y = mean_od600, fill = unit_operation_stream_type)) +
+      geom_bar(stat="identity") +
+      geom_errorbar(aes(
+        ymin = mean_od600 - stdev_od600,
+        ymax = mean_od600 + stdev_od600,
+        width = 0.4
+      )
+      ) +
+      scale_fill_manual(values=pink_shades) +
+      labs(y = 'OD600', x = 'Stream Type') +
+      facet_wrap(vars(plot_title)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+    
+    
+  })
+  
+  output$od600_stream_boxplot <- renderPlot({
+    
+    print(od600_stream_plotInput())
+    
+  })
+  
+  output$od600_stream_download <- downloadHandler(
+    filename = function() {'OD600_stream.pdf'},
+    content = function(file) {
+      ggsave(file, plot = od600_stream_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  
+  
+  
+  output$od600_stream_summary <- render_gt({
+    
+    selected_rows <- input$in_process_stream_table_rows_selected
+    
+    table <- df_dsp_purif_stream_results_entity %>%
+      slice(selected_rows) %>%
+      mutate(unit_operation_stream_type = paste(unit_operation_type, stream, sep='-')) %>%
+      select(unit_operation_stream_type, od600) %>%
+      group_by(unit_operation_stream_type) %>%
+      summarise(Mean = round(mean(od600, na.rm = TRUE),2),
+                'Std Dev' = round(sd(od600, na.rm = TRUE),2),
+                CV = round((sd(od600, na.rm = TRUE) / mean(od600, na.rm = TRUE)) * 100,2),
+                Min = round(min(od600, na.rm = TRUE),2),
+                Max = round(max(od600, na.rm = TRUE),2),
+                'Upper Outlier Level' = round(quantile(od600, na.rm = TRUE, probs = 0.75) + (1.5 * IQR(od600,na.rm = TRUE)),2),
+                'Lower Outlier Level' = round(quantile(od600, na.rm = TRUE, probs = 0.25) - (1.5 * IQR(od600,na.rm = TRUE)),2)
+      )
+    table
+  })
+  
+  
+  
+  
+  # Total Solids vs. Stream Type - Boxplot
+  
+  
+  
+  total_solids_stream_plotInput <- reactive({
+    
+    selected_rows <- input$in_process_stream_table_rows_selected
+    
+    ggplot(data =  df_dsp_purif_stream_results_entity %>%
+             slice(selected_rows) %>%
+             mutate(unit_operation_stream_type = paste(unit_operation_type, stream, sep='-')) %>%
+             select(
+               unit_operation_stream_type,
+               unit_operation_number,
+               ph,
+               conductivity_mscm,
+               od600,
+               total_solids_gkg
+             ) %>%
+             filter(!is.na(unit_operation_stream_type)) %>%
+             group_by(unit_operation_stream_type) %>%
+             summarise(mean_unit_operation_number = mean(unit_operation_number, na.rm = TRUE),
+                       mean_pH = mean(ph, na.rm = TRUE),
+                       mean_conductivity_mscm = mean(conductivity_mscm, na.rm = TRUE),
+                       mean_od600 = mean(od600, na.rm = TRUE),
+                       mean_total_solids_gkg = mean(total_solids_gkg, na.rm = TRUE),
+                       stdev_ph = sd(ph, na.rm = TRUE),
+                       stdev_conductivity_mscm = sd(conductivity_mscm, na.rm = TRUE),
+                       stdev_od600 = sd(od600, na.rm = TRUE),
+                       stdev_total_solids_gkg = sd(total_solids_gkg, na.rm = TRUE)
+             ) %>%
+             mutate(plot_title = 'Total Solids vs. Stream Type'),
+           aes(x = reorder(unit_operation_stream_type, mean_unit_operation_number), y = mean_total_solids_gkg, fill = unit_operation_stream_type)) +
+      geom_bar(stat="identity") +
+      geom_errorbar(aes(
+        ymin = mean_total_solids_gkg - stdev_total_solids_gkg,
+        ymax = mean_total_solids_gkg + stdev_total_solids_gkg,
+        width = 0.4
+      )
+      ) +
+      scale_fill_manual(values=pink_shades) +
+      labs(y = 'Total Solids (g/kg)', x = 'Stream Type') +
+      facet_wrap(vars(plot_title)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+    
+    
+  })
+  
+  output$total_solids_stream_boxplot <- renderPlot({
+    
+    print(total_solids_stream_plotInput())
+    
+  })
+  
+  output$total_solids_stream_download <- downloadHandler(
+    filename = function() {'Total_solids_stream.pdf'},
+    content = function(file) {
+      ggsave(file, plot = total_solids_stream_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  
+  
+  output$total_solids_stream_summary <- render_gt({
+    
+    selected_rows <- input$in_process_stream_table_rows_selected
+    
+    table <- df_dsp_purif_stream_results_entity %>%
+      slice(selected_rows) %>%
+      mutate(unit_operation_stream_type = paste(unit_operation_type, stream, sep='-')) %>%
+      select(unit_operation_stream_type, total_solids_gkg) %>%
+      group_by(unit_operation_stream_type) %>%
+      summarise(Mean = round(mean(total_solids_gkg, na.rm = TRUE),2),
+                'Std Dev' = round(sd(total_solids_gkg, na.rm = TRUE),2),
+                CV = round((sd(total_solids_gkg, na.rm = TRUE) / mean(total_solids_gkg, na.rm = TRUE)) * 100,2),
+                Min = round(min(total_solids_gkg, na.rm = TRUE),2),
+                Max = round(max(total_solids_gkg, na.rm = TRUE),2),
+                'Upper Outlier Level' = round(quantile(total_solids_gkg, na.rm = TRUE, probs = 0.75) + (1.5 * IQR(total_solids_gkg,na.rm = TRUE)),2),
+                'Lower Outlier Level' = round(quantile(total_solids_gkg, na.rm = TRUE, probs = 0.25) - (1.5 * IQR(total_solids_gkg,na.rm = TRUE)),2)
+      )
+    table
+  })
+  
+
 
 }
 
