@@ -52,7 +52,6 @@ pink_shades <- c(
 
 
 
-# Define UI for application that draws a histogram
 ui <- dashboardPage(skin = 'blue',
                     dashboardHeader(title = 'DSP Dashboard'),
                     dashboardSidebar(
@@ -252,7 +251,7 @@ server <- function(input, output) {
       geom_bar(stat="identity") +
       geom_text(aes(label=round(protein_step_recovery,1)), position=position_dodge(width=0.9), vjust=-0.25) +
       scale_fill_manual(values=pink_shades) +
-      labs(y = 'HPLC LF Step Recovery', x = 'Unit Operation ID') +
+      labs(y = 'Protein Step Recovery (%)', x = 'Unit Operation ID') +
       facet_wrap(vars(plot_title)) +
       theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
       theme(text = element_text(size = 16))
@@ -289,7 +288,7 @@ server <- function(input, output) {
       geom_bar(stat="identity") +
       geom_text(aes(label=round(protein_mass_balance,1)), position=position_dodge(width=0.9), vjust=-0.25) +
       scale_fill_manual(values=pink_shades) +
-      labs(y = 'HPLC LF Mass Balance', x = 'Unit Operation ID') +
+      labs(y = 'Protein Mass Balance (%)', x = 'Unit Operation ID') +
       facet_wrap(vars(plot_title)) +
       theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
       theme(text = element_text(size = 16))
@@ -346,7 +345,7 @@ server <- function(input, output) {
            aes(x = reorder(unit_operation_id_name,unit_operation_number), y = value, fill = KPI)) +
       geom_bar(stat="identity", position = position_dodge2(reverse = TRUE)) +
       scale_fill_manual(values=pink_shades, guide = guide_legend(reverse = TRUE)) +
-      labs(y = 'HPLC LF Step Recovery/Mass Balance (%)', x = 'Unit Operation ID') +
+      labs(y = 'Step Recovery/Mass Balance (%)', x = 'Unit Operation ID') +
       facet_wrap(vars(plot_title)) +
       theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
       theme(text = element_text(size = 16))
@@ -405,7 +404,7 @@ server <- function(input, output) {
       )
       ) +
       scale_fill_manual(values=pink_shades) +
-      labs(y = 'HPLC LF Step Recovery', x = 'Unit Operation Type') +
+      labs(y = 'Protein Step Recovery (%)', x = 'Unit Operation Type') +
       facet_wrap(vars(plot_title)) +
       theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
       theme(text = element_text(size = 16))
@@ -487,7 +486,7 @@ server <- function(input, output) {
       )
       ) +
       scale_fill_manual(values=pink_shades) +
-      labs(y = 'HPLC LF Mass Balance (%)', x = 'Unit Operation Type') +
+      labs(y = 'Protein Mass Balance (%)', x = 'Unit Operation Type') +
       facet_wrap(vars(plot_title)) +
       theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
       theme(text = element_text(size = 16))
@@ -537,7 +536,165 @@ server <- function(input, output) {
   
   
   
+  # In-Process Data - Experimental View
+  
+  
+  
+  # Line graph for pH throughput experiment
+  
+  pH_plotInput <- reactive({
+    selected_condition_ids <- input$in_process_selection # Get selected rows
     
+    ggplot(
+      data = df_dsp_purif_stream_results_entity %>%
+        mutate(
+          plot_title = 'pH vs. Unit Operation ID',
+          unit_operation_stream = paste(unit_operation_type, stream, sep = '-')
+        ) %>%
+        filter((condition_id_name == selected_condition_ids) & (stream == 'Product' | stream == 'Feed')),
+      aes(x=reorder(factor(unit_operation_stream),unit_operation_number), y=ph, group=condition_id_name, color = condition_id_name)) +
+      geom_line() +
+      geom_point() +
+      scale_color_manual(values=pink_shades) +
+      facet_wrap(vars(plot_title)) +
+      labs(y = 'pH', x = 'Unit Operation Type') +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16)) 
+    
+    
+  })
+  
+  output$pH_lineplot <- renderPlot({
+    
+    print(pH_plotInput())
+    
+  })
+  
+  output$pH_download <- downloadHandler(
+    filename = function() {'pH.pdf'},
+    content = function(file) {
+      ggsave(file, plot = pH_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  # Line graph for conductivity throughout experiment
+  
+  conductivity_plotInput <- reactive({
+    
+    selected_condition_ids <- input$in_process_selection # Get selected rows
+    
+    ggplot(
+      data = df_dsp_purif_stream_results_entity %>%
+        mutate(
+          plot_title = 'Conductivity vs. Unit Operation ID',
+          unit_operation_stream = paste(unit_operation_type, stream, sep = '-')
+        ) %>%
+        filter((condition_id_name == selected_condition_ids) & (stream == 'Product' | stream == 'Feed')),
+      aes(x=reorder(factor(unit_operation_stream),unit_operation_number), y=conductivity_mscm, group=condition_id_name, color = condition_id_name)) +
+      geom_line() +
+      geom_point() +
+      scale_color_manual(values=pink_shades) +
+      facet_wrap(vars(plot_title)) +
+      labs(y = 'Conductivity (mS/cm)', x = 'Unit Operation Type') +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))  +
+      theme(text = element_text(size = 16)) 
+    
+  })
+  
+  output$conductivity_lineplot <- renderPlot({
+    
+    print(conductivity_plotInput())
+    
+  })
+  
+  output$conductivity_download <- downloadHandler(
+    filename = function() {'Conductivity.pdf'},
+    content = function(file) {
+      ggsave(file, plot = conductivity_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  
+  # Line graph for OD600 throughput experiment
+  
+  od600_plotInput <- reactive({
+    
+    selected_condition_ids <- input$in_process_selection # Get selected rows
+    
+    ggplot(
+      data = df_dsp_purif_stream_results_entity %>%
+        mutate(
+          plot_title = 'OD600 vs. Unit Operation ID',
+          unit_operation_stream = paste(unit_operation_type, stream, sep = '-')
+        ) %>%
+        filter((condition_id_name == selected_condition_ids) & (stream == 'Product' | stream == 'Feed')),
+      aes(x=reorder(factor(unit_operation_stream),unit_operation_number), y=od600, group=condition_id_name, color = condition_id_name)) +
+      geom_line() +
+      geom_point() +
+      scale_color_manual(values=pink_shades) +
+      facet_wrap(vars(plot_title)) +
+      labs(y = 'OD600', x = 'Unit Operation Type') +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))  +
+      theme(text = element_text(size = 16)) 
+    
+  })
+  
+  output$od600_lineplot <- renderPlot({
+    
+    print(od600_plotInput())
+    
+  })
+  
+  output$od600_download <- downloadHandler(
+    filename = function() {'OD600.pdf'},
+    content = function(file) {
+      ggsave(file, plot = od600_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  
+  # Line graph for Total Solids throughput experiment
+  
+  total_solids_plotInput <- reactive({
+    
+    selected_condition_ids <- input$in_process_selection # Get selected rows
+    
+    ggplot(
+      data = df_dsp_purif_stream_results_entity %>%
+        mutate(
+          plot_title = 'Total Solids vs. Unit Operation ID',
+          unit_operation_stream = paste(unit_operation_type, stream, sep = '-')
+        ) %>%
+        filter((condition_id_name == selected_condition_ids) & (stream == 'Product' | stream == 'Feed')),
+      aes(x=reorder(factor(unit_operation_stream),unit_operation_number), y=total_solids_gkg, group=condition_id_name, color = condition_id_name)) +
+      geom_line() +
+      geom_point() +
+      scale_color_manual(values=pink_shades) +
+      facet_wrap(vars(plot_title)) +
+      labs(y = 'Total Solids (g/kg)', x = 'Unit Operation Type') +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))  +
+      theme(text = element_text(size = 16)) 
+    
+    
+  })
+  
+  output$total_solids_lineplot <- renderPlot({
+    
+    print(total_solids_plotInput())
+    
+  })
+  
+  output$total_solids_download <- downloadHandler(
+    filename = function() {'Total_Solids.pdf'},
+    content = function(file) {
+      ggsave(file, plot = total_solids_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+
 }
 
 # Run the application 
