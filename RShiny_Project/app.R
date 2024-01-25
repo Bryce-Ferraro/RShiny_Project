@@ -1789,6 +1789,79 @@ server <- function(input, output) {
   )
   
   
+  # PFD Page
+  
+  
+  pfd_plotInput <- reactive({
+    
+    selected_experiment_ids <- input$pfd_selection # Get selected rows
+    
+    pfd_data = df_dsp_purif_stream_results_entity %>% filter((experiment_id_name %in% selected_experiment_ids) & (feed_unit_operation_id_name != unit_operation_id_name)) %>% select(from = feed_unit_operation_id_name,to = unit_operation_id_name) %>% na.omit()
+    
+    
+    g = graph_from_data_frame(pfd_data, directed = TRUE)
+    coords = layout_as_tree(g)
+    colnames(coords) = c("x", "y")
+    
+    output_df = as_tibble(coords) %>%
+      mutate(step = vertex_attr(g, "name"),
+             label = step,
+             x = x*-1)
+    
+    plot_nodes = output_df %>%
+      mutate(xmin = x - 0.35,
+             xmax = x + 0.35,
+             ymin = y - 0.25,
+             ymax = y + 0.25)
+    
+    plot_edges = pfd_data %>%
+      mutate(id = row_number()) %>%
+      pivot_longer(cols = c("from", "to"),
+                   names_to = "s_e",
+                   values_to = "step") %>%
+      left_join(plot_nodes, by = "step") %>%
+      select(-c(label, y, xmin, xmax)) %>%
+      mutate(y = ifelse(s_e == "from", ymin, ymax)) %>%
+      select(-c(ymin, ymax))
+    
+    p = ggplot() +
+      geom_rect(data = plot_nodes,
+                mapping = aes(xmin = xmin, ymin = ymin,
+                              xmax = xmax, ymax = ymax),
+                alpha = 0.5)
+    
+    p = p +
+      geom_text(data = plot_nodes,
+                mapping = aes(x = x, y = y, label = label))
+    
+    p = p +
+      geom_path(data = plot_edges,
+                mapping = aes(x = x, y = y, group = id),
+                colour = "#585c45",
+                arrow = arrow(length = unit(0.3, "cm"), type = "closed"))
+    
+    plot(p)
+    
+    
+    
+    
+    
+  })
+  
+  output$pfd_plot <- renderPlot({
+    
+    print(pfd_plotInput())
+    
+  })
+  
+  output$pfd_download <- downloadHandler(
+    filename = function() {'PFD.pdf'},
+    content = function(file) {
+      ggsave(file, plot = pfd_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
 
 }
 
