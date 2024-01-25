@@ -59,7 +59,8 @@ ui <- dashboardPage(skin = 'blue',
                       div(htmlOutput("welcome"), style = "padding: 20px"),
                       sidebarMenu(
                         menuItem("DSP KPI", tabName = "dsp_kpi_page", icon = icon("bar-chart")),
-                        menuItem("In-Process Data - Expt View", tabName = "in_process_expt_data_page", icon = icon("bar-chart"))#,
+                        menuItem("In-Process Data - Expt View", tabName = "in_process_expt_data_page", icon = icon("bar-chart")),
+                        menuItem("In-Process Data - Stream View", tabName = "in_process_stream_data_page", icon = icon("bar-chart"))
                       )
                     ),
                     dashboardBody(
@@ -185,7 +186,92 @@ ui <- dashboardPage(skin = 'blue',
                                            )
                                          )
                                 )
-                                )#,
+                                ),
+                        tabItem(tabName = 'in_process_stream_data_page',
+                                fluidRow(h4("Data Selection"),
+                                         box(
+                                           width = 12,
+                                           
+                                           box(
+                                             column(
+                                               width = 12,
+                                               DT::dataTableOutput("in_process_stream_table"),
+                                               actionButton("do_refresh_in_process_stream_tab", "Load data")
+                                             )),
+                                           box(
+                                             column(
+                                               width = 12,
+                                               tableOutput("in_process_stream_selectedRows") # Selected rows on the right side
+                                               
+                                               
+                                             )
+                                           )
+                                           
+                                         )
+                                         
+                                ),
+                                fluidRow(h4("Data Plots"),
+                                         tabsetPanel(
+                                           tabPanel("pH",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('pH_stream_boxplot')
+                                                      ),
+                                                      box(
+                                                        tableOutput('pH_stream_summary')
+                                                      )
+                                                    ),
+                                                    downloadButton('pH_stream_download', 'Download Plot'),
+                                                    
+                                                    
+                                           ),
+                                           tabPanel("Conductivity",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('conductivity_stream_boxplot')
+                                                      ),
+                                                      box(
+                                                        tableOutput('conductivity_stream_summary')
+                                                      )
+                                                    ),
+                                                    downloadButton('conductivity_stream_download', 'Download Plot'),
+                                                    
+                                           ),
+                                           tabPanel("OD600",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('od600_stream_boxplot')
+                                                      ),
+                                                      box(
+                                                        tableOutput('od600_stream_summary')
+                                                      )
+                                                    ),
+                                                    downloadButton('od600_stream_download', 'Download Plot'),
+                                                    
+                                                    
+                                                    
+                                                    
+                                           ),
+                                           tabPanel("Total Solids",
+                                                    fluidRow(
+                                                      box(
+                                                        plotOutput('total_solids_stream_boxplot')
+                                                      ),
+                                                      box(
+                                                        tableOutput('total_solids_stream_summary')
+                                                      )
+                                                    ),
+                                                    downloadButton('total_solids_stream_download', 'Download Plot'),
+                                                    
+                                                    
+                                                    
+                                           )
+                                           
+                                         )
+                                )
+                                
+                                
+                        )#,
                       )   
                     )
 )
