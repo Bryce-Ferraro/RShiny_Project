@@ -762,7 +762,7 @@ server <- function(input, output) {
   # Line graph for pH throughput experiment
   
   pH_plotInput <- reactive({
-    selected_condition_ids <- input$in_process_selection # Get selected rows
+    selected_condition_ids <- input$in_process_selection 
     
     ggplot(
       data = df_dsp_purif_stream_results_entity %>%
@@ -1620,6 +1620,157 @@ server <- function(input, output) {
     filename = function() {'Membrane_Usage.pdf'},
     content = function(file) {
       ggsave(file, plot = uses_mem_id_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  # Unit Op Time-Series 
+  
+  
+  # Flux vs. Time
+  
+  flux_time_plotInput <- reactive({
+    
+    selected_run_ids <- input$ts_selection 
+    
+    ggplot(
+      data = df_dsp_filter_ts %>%
+        filter(TRIAL_IDUNITS %in% selected_run_ids) %>%
+        mutate(plot_title = 'Flux vs. Duration'),
+      aes(x = DURATION_MINUTES, y = FLUXLMH, color = TRIAL_IDUNITS)) +
+      geom_point() +
+      scale_color_manual(values=pink_shades) +
+      facet_wrap(vars(plot_title)) +
+      labs(y = 'Flux (LMH)', x = 'Duration (min)') +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+    
+    
+    
+  })
+  
+  output$flux_time_scatterplot <- renderPlot({
+    
+    print(flux_time_plotInput())
+    
+  })
+  
+  output$flux_time_download <- downloadHandler(
+    filename = function() {'Flux_Time.pdf'},
+    content = function(file) {
+      ggsave(file, plot = flux_time_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  
+  
+  # Flux vs. Concentration
+  
+  flux_conc_plotInput <- reactive({
+    
+    selected_run_ids <- input$ts_selection 
+    
+    ggplot(
+      data = df_dsp_filter_ts %>%
+        filter(TRIAL_IDUNITS %in% selected_run_ids) %>%
+        mutate(plot_title = 'Flux vs. Concentration Factor'),
+      aes(x = CFX, y = FLUXLMH, color = TRIAL_IDUNITS)) +
+      geom_point() +
+      scale_color_manual(values=pink_shades) +
+      facet_wrap(vars(plot_title)) +
+      labs(y = 'Flux (LMH)', x = 'Concentration Factor (X)') +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+    
+    
+    
+  })
+  
+  output$flux_conc_scatterplot <- renderPlot({
+    
+    print(flux_conc_plotInput())
+    
+  })
+  
+  output$flux_conc_download <- downloadHandler(
+    filename = function() {'Flux_Conc.pdf'},
+    content = function(file) {
+      ggsave(file, plot = flux_conc_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  
+  # Flux vs. Diavolumes
+  
+  flux_dia_plotInput <- reactive({
+    
+    selected_run_ids <- input$ts_selection 
+    
+    ggplot(
+      data = df_dsp_filter_ts %>%
+        filter(TRIAL_IDUNITS %in% selected_run_ids) %>%
+        mutate(plot_title = 'Flux vs. Diavolumes'),
+      aes(x = DV_1X, y = FLUXLMH, color = TRIAL_IDUNITS)) +
+      geom_point() +
+      scale_color_manual(values=pink_shades) +
+      facet_wrap(vars(plot_title)) +
+      labs(y = 'Flux (LMH)', x = 'Diavolumes (X)') +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+    
+    
+    
+  })
+  
+  output$flux_dia_scatterplot <- renderPlot({
+    
+    print(flux_dia_plotInput())
+    
+  })
+  
+  output$flux_dia_download <- downloadHandler(
+    filename = function() {'Flux_Dia.pdf'},
+    content = function(file) {
+      ggsave(file, plot = flux_dia_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
+    }
+  )
+  
+  
+  
+  # TMP vs. Time
+  
+  tmp_time_plotInput <- reactive({
+    
+    selected_run_ids <- input$ts_selection 
+    
+    ggplot(
+      data = df_dsp_filter_ts %>%
+        filter(TRIAL_IDUNITS %in% selected_run_ids) %>%
+        mutate(plot_title = 'TMP vs. Duration'),
+      aes(x = DURATION_MINUTES, y = TMPPSI, color = TRIAL_IDUNITS)) +
+      geom_point() +
+      scale_color_manual(values=pink_shades) +
+      facet_wrap(vars(plot_title)) +
+      labs(y = 'TMP (psi)', x = 'Duration (min)') +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(text = element_text(size = 16))
+    
+    
+    
+  })
+  
+  output$tmp_time_scatterplot <- renderPlot({
+    
+    print(tmp_time_plotInput())
+    
+  })
+  
+  output$tmp_time_download <- downloadHandler(
+    filename = function() {'TMP_Time.pdf'},
+    content = function(file) {
+      ggsave(file, plot = tmp_time_plotInput(), device = "pdf", width = 21 , height = 14 , units = "in")
     }
   )
   
