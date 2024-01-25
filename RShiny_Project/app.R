@@ -60,7 +60,8 @@ ui <- dashboardPage(skin = 'blue',
                       sidebarMenu(
                         menuItem("DSP KPI", tabName = "dsp_kpi_page", icon = icon("bar-chart")),
                         menuItem("In-Process Data - Expt View", tabName = "in_process_expt_data_page", icon = icon("bar-chart")),
-                        menuItem("In-Process Data - Stream View", tabName = "in_process_stream_data_page", icon = icon("bar-chart"))
+                        menuItem("In-Process Data - Stream View", tabName = "in_process_stream_data_page", icon = icon("bar-chart")),
+                        menuItem("TFF Membrane", tabName = "tff_membrane_page", icon = icon("table"))
                       )
                     ),
                     dashboardBody(
