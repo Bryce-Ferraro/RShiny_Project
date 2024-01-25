@@ -1051,6 +1051,11 @@ server <- function(input, output) {
   
   # Output selected rows
   output$in_process_stream_selectedRows <- render_gt({
+    
+    validate(
+      need(input$in_process_stream_table_rows_selected , "Please select data")
+    )
+    
     in_process_stream_selected_rows <- input$in_process_stream_table_rows_selected # Get selected rows
     if (!is.null(in_process_stream_selected_rows) && length(in_process_stream_selected_rows) > 0) {
       in_process_stream_selected_data <- df_dsp_purif_stream_results_entity %>% select(sample_id_name, experiment_id_name) %>% slice(in_process_stream_selected_rows)
@@ -1068,6 +1073,10 @@ server <- function(input, output) {
   
   
   pH_stream_plotInput <- reactive({
+    
+    validate(
+      need(input$in_process_stream_table_rows_selected , "No data selected")
+    )
     
     selected_rows <- input$in_process_stream_table_rows_selected
     
@@ -1158,6 +1167,10 @@ server <- function(input, output) {
   
   conductivity_stream_plotInput <- reactive({
     
+    validate(
+      need(input$in_process_stream_table_rows_selected , "No data selected")
+    )
+    
     selected_rows <- input$in_process_stream_table_rows_selected
     
     ggplot(data =  df_dsp_purif_stream_results_entity %>%
@@ -1245,6 +1258,10 @@ server <- function(input, output) {
   
   
   od600_stream_plotInput <- reactive({
+    
+    validate(
+      need(input$in_process_stream_table_rows_selected , "No data selected")
+    )
     
     selected_rows <- input$in_process_stream_table_rows_selected
     
@@ -1334,6 +1351,10 @@ server <- function(input, output) {
   
   
   total_solids_stream_plotInput <- reactive({
+    
+    validate(
+      need(input$in_process_stream_table_rows_selected , "No data selected")
+    )
     
     selected_rows <- input$in_process_stream_table_rows_selected
     
