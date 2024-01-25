@@ -1912,6 +1912,73 @@ server <- function(input, output) {
   )
   
   
+  # DOWNLOAD PAGE
+  
+  
+  output$dsp_streams_data_download_selection_button <- downloadHandler(
+    filename = function() {
+      paste0('DSP_Purif_Stream_Data_',Sys.Date(), '.csv')
+    },
+    content = function(file) {
+      selected_experiment_ids <- input$dsp_streams_data_download_selection
+      
+      download_data = df_dsp_purif_stream_results_entity %>%
+        filter(experiment_id_name %in% selected_experiment_ids)
+      
+      write.csv(download_data, file, row.names = FALSE)
+    }
+  )
+  
+  output$dsp_streams_data_download_total_button <- downloadHandler(
+    filename = function() {
+      paste0('DSP_Purif_Stream_Data_',Sys.Date(), '.csv')
+    },
+    content = function(file) {
+      
+      write.csv(df_dsp_purif_stream_results_entity, file, row.names = FALSE)
+    }
+  )
+  
+  output$membrane_data_download_selection_button <- downloadHandler(
+    filename = function() {
+      paste0('Membrane_Data_',Sys.Date(), '.csv')
+    },
+    content = function(file) {
+      selected_membrane_ids <- input$membrane_data_download_selection
+      
+      download_data = df_dsp_membrane_log_results_entity %>%
+        filter(membrane_id_name %in% selected_membrane_ids)
+      
+      write.csv(download_data, file, row.names = FALSE)
+    }
+  )
+  
+  output$membrane_data_download_total_button <- downloadHandler(
+    filename = function() {
+      paste0('Membrane_Data_',Sys.Date(), '.csv')
+    },
+    content = function(file) {
+      
+      write.csv(df_dsp_membrane_log_results_entity, file, row.names = FALSE)
+    }
+  )
+  
+  output$ts_data_download_selection_button <- downloadHandler(
+    filename = function() {
+      paste0('Time_Series_Data_',Sys.Date(), '.csv')
+    },
+    content = function(file) {
+      
+      selected_run_ids <- input$ts_data_download_selection
+      
+      download_data = df_dsp_filter_ts %>%
+        filter(TRIAL_IDUNITS %in% selected_run_ids)
+
+      write.csv(download_data, file, row.names = FALSE)
+    }
+  )
+  
+  
 
 }
 
